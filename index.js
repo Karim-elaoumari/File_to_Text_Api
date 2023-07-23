@@ -1,41 +1,27 @@
 
 const express = require('express');
 const request = require('request-promise');
-const Pdf2TextClass = require('./Pdf2TextClass');
 
-
+const fileUpload = require("express-fileupload");
+const pdfParse = require("pdf-parse");
 const app = express();
-app.use(express.raw({ type: 'application/pdf' }));
+
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
+app.use(fileUpload());
 app.get('/', (req, res) => {
     res.send('Hello World!');
     }
 );
 app.post('/upload/:extension', async (req, res) => {
-    const fileBlob = req.body;
-    const fileExtension = req.params.extension;
-  
-    if (!fileBlob) {
-      return res.status(400).json({ error: 'Please provide a file blob in the request body.' });
-    }
-  
-    if (!fileExtension) {
-      return res.status(400).json({ error: 'Please provide the file extension in the "x-file-extension" header.' });
-    }
-  
-    if (fileExtension.toLowerCase() === 'pdf') {
-        var pdfBlob = new Blob([fileBlob], { type: 'application/pdf' });
-        var pdf2Text = new Pdf2TextClass();
-        pdf2Text.pdfToText(pdfBlob, function (pagesDone, totalPages) {
-        // Progress callback
-        console.log('Pages done: ' + pagesDone + '/' + totalPages);
-        }, function (result) {
-        // Result callback - 'result' will be the extracted text as a string
-        console.log('Extracted Text:', result);
-        res.json({ extension: fileExtension, text: result });
-        });
-    }
+        if (!req.files && !req.files.pdfFile) {
+          res.status(400);
+          res.end();
+      }
+
+      pdfParse(req.files.pdfFile).then(result => {
+          res.send(result.text);
+      });
 });
 
 
