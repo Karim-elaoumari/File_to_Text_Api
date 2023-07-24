@@ -14,13 +14,17 @@ app.get('/', (req, res) => {
     }
 );
 app.post('/upload/:extension', async (req, res) => {
-        if (!req.files && !req.files.pdfFile) {
+        if (!req.body || !req.body.pdfBase64) {
           res.status(400);
           res.end();
       }
-      const pdfFileBase64 = req.files.pdfFile.data.toString("base64");
+      
+      
   
-      const pdfFileBuffer = Buffer.from(pdfFileBase64, "base64");
+      const pdfFileBase64 = req.body.pdfBase64;
+
+      
+      const pdfFileBuffer = Buffer.from(pdfFileBase64, 'base64');
 
       pdfParse(pdfFileBuffer).then(result => {
           res.send(result.text);
