@@ -14,17 +14,27 @@ app.get('/', (req, res) => {
     }
 );
 app.post('/upload/:extension', async (req, res) => {
-        if (!req.files && !req.files.pdfFile) {
-          res.status(400);
-          res.end();
-      }
-      const pdfFileBase64 = req.files.pdfFile.data.toString("base64");
+    const { url } = req.body;
+
+    if (!url) {
+      res.status(400).send('File URL not provided.');
+      return;
+    }
   
-      const pdfFileBuffer = Buffer.from(pdfFileBase64, "base64");
-
+    
+      const pdfFileBuffer = await downloadFile(url);
       pdfParse(pdfFileBuffer).then(result => {
-          res.send(result.text);
+        res.send(result.text);
       });
-});
+    
 
+     
+});
+function downloadFile(url) {
+    const options = {
+      uri: url,
+      encoding: null // This ensures the response body is returned as a Buffer
+    };
+    return request.get(options);
+  }
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
