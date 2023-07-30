@@ -25,9 +25,9 @@ app.post('/upload/:extension', async (req, res) => {
          const extension = req.params.extension;
          axios.get(req.body.pdfBase64 ,{responseType: 'arraybuffer'})
          .then(response => {
-          
+          let buffer = Buffer.from(response.data, 'base64');
           if(extension == 'pdf'){
-            pdfParse(response.data).then(result => {
+            pdfParse(buffer).then(result => {
                 res.send(result.text);
             })
             .catch(err => {
@@ -36,7 +36,7 @@ app.post('/upload/:extension', async (req, res) => {
               });
           }
           else if(extension == 'xlsx'){
-            let wb = xlsx.read(response.data, {type:'buffer'});
+            let wb = xlsx.read(buffer, {type:'buffer'});
            try{
             let textData = xlsx.utils.sheet_to_txt(wb.Sheets[wb.SheetNames[0]]);
             textData = textData.replace(/[^a-zA-Z0-9 ]/g, "");
@@ -49,7 +49,7 @@ app.post('/upload/:extension', async (req, res) => {
           }
           else if(extension == 'image'){
             Tesseract.recognize(
-              response.data,
+              buffer,
                 'eng',
                 { logger: m => console.log(m) }
               ).then(({ data: { text } }) => {
@@ -61,7 +61,7 @@ app.post('/upload/:extension', async (req, res) => {
               });
           }else if(extension == 'doc'){
             const extractor = new WordExtractor();
-            const extracted = extractor.extract(response.data);
+            const extracted = extractor.extract(buffer);
             extracted.then(function(doc) {
                  res.send(doc.getBody());
                  })
